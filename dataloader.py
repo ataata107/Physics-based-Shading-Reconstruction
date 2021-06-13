@@ -44,7 +44,7 @@ class AlbShadDataset(Dataset):
             path1 = os.path.join(self.base_path,i)
             data = os.listdir(path1)
             for j in data:
-                final_dir_path = os.path.join(path,j)
+                final_dir_path = os.path.join(path1,j)
                 final_img_path = os.path.join(final_dir_path,"Camera_front000001.mat")
                 if(path.exists(final_img_path)):
                     self.data.append(final_img_path)

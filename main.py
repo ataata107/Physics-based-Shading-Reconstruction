@@ -90,8 +90,8 @@ net_model = FinalModel().to(device)
 alpha_mse_albedo = torch.randn(1, requires_grad=True, dtype=torch.float)
 alpha_mse_shading = torch.randn(1, requires_grad=True, dtype=torch.float)
 optimizerM = optim.Adam(net_model.parameters(), lr=lr, betas=(beta1, beta2))
-optimizer.param_groups.append({'params': alpha_mse_albedo})
-optimizer.param_groups.append({'params': alpha_mse_shading})
+optimizerM.param_groups.append({'params': alpha_mse_albedo})
+optimizerM.param_groups.append({'params': alpha_mse_shading})
 
 if(pretrained_model!=None):
   net_model, optimizerM, start_epoch, alpha_mse_albedo, alpha_mse_shading = load_ckp(checkpoint_model_path+pretrained_model, net_model, optimizerM)
@@ -131,7 +131,7 @@ for epoch in range(start_epoch,num_epochs):
     shading_loss = 2*(0.95*smse_loss_2 + 0.05*mse_loss_2)
 
     err = 1*albedo_loss + 1*shading_loss
-    
+
     err.backward()
     optimizerM.step()
     

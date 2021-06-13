@@ -3,3 +3,4 @@ download
 download.jpeg
 wget-log
 cvpr18_models/
+__pycache__/

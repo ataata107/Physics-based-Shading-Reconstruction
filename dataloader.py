@@ -41,8 +41,8 @@ class AlbShadDataset(Dataset):
         self.dirs = sorted(os.listdir(self.base_path))
         self.data = []
         for i in self.dirs:
-            path = os.path.join(self.base_path,i)
-            data = os.listdir(path)
+            path1 = os.path.join(self.base_path,i)
+            data = os.listdir(path1)
             for j in data:
                 final_dir_path = os.path.join(path,j)
                 final_img_path = os.path.join(final_dir_path,"Camera_front000001.mat")

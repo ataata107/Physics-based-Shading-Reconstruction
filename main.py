@@ -16,7 +16,7 @@ import torch.optim as optim
 from torch.autograd import Variable
 from dataloader import AlbShadDataset, Rescale, ToTensor
 from models import FinalModel
-from util import load_ckp
+from util import load_ckp, save_ckp
 
 # custom weights initialization called on netG and netD
 def weights_init(m):

@@ -46,7 +46,7 @@ def load_ckp(checkpoint_fpath, model, optimizer):
     # initialize valid_loss_min from checkpoint to valid_loss_min
     # valid_loss_min = checkpoint['valid_loss_min']
     # return model, optimizer, epoch value, min validation loss 
-    return model, optimizer, checkpoint['epoch']#, valid_loss_min.item()
+    return model, optimizer, checkpoint['epoch'], checkpoint['alpha_mse_albedo'], checkpoint['alpha_mse_shading']#, valid_loss_min.item()
 
 
 # import cv2

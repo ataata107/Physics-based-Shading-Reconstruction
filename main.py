@@ -87,10 +87,14 @@ dataloader = DataLoader(flow_dataset, batch_size=batch_size,shuffle=True, num_wo
 
 net_model = FinalModel().to(device) 
 # net_impainter.apply(weights_init)
+alpha_mse_albedo = torch.randn(1, requires_grad=True, dtype=torch.float)
+alpha_mse_shading = torch.randn(1, requires_grad=True, dtype=torch.float)
 optimizerM = optim.Adam(net_model.parameters(), lr=lr, betas=(beta1, beta2))
+optimizer.param_groups.append({'params': alpha_mse_albedo})
+optimizer.param_groups.append({'params': alpha_mse_shading})
 
 if(pretrained_model!=None):
-  net_model, optimizerM, start_epoch = load_ckp(checkpoint_model_path+pretrained_model, net_model, optimizerM)
+  net_model, optimizerM, start_epoch, alpha_mse_albedo, alpha_mse_shading = load_ckp(checkpoint_model_path+pretrained_model, net_model, optimizerM)
   print("Loaded pretrained: " + pretrained_model)
 
 
@@ -120,7 +124,14 @@ for epoch in range(start_epoch,num_epochs):
     mse_loss_1 = loss_l2(albedo_pred, image_albedo)
     mse_loss_2 = loss_l2(shading_pred, image_shading)
 
-    err = mse_loss_1 + mse_loss_2
+    smse_loss_1 = loss_l2(albedo_pred*alpha_mse_albedo, image_albedo)
+    smse_loss_2 = loss_l2(shading_pred*alpha_mse_shading, image_shading)
+
+    albedo_loss = 2*(0.95*smse_loss_1 + 0.05*mse_loss_1)
+    shading_loss = 2*(0.95*smse_loss_2 + 0.05*mse_loss_2)
+
+    err = 1*albedo_loss + 1*shading_loss
+    
     err.backward()
     optimizerM.step()
     
@@ -129,6 +140,8 @@ for epoch in range(start_epoch,num_epochs):
       checkpoint_model = {
           'epoch': epoch + 1,
           'state_dict': net_model.state_dict(),
+          'alpha_mse_albedo' : alpha_mse_albedo,
+          'alpha_mse_shading' : alpha_mse_shading,
           'optimizer': optimizerM.state_dict(),
       }
 
@@ -139,6 +152,8 @@ for epoch in range(start_epoch,num_epochs):
   checkpoint_model = {
         'epoch': epoch + 1,
         'state_dict': net_model.state_dict(),
+        'alpha_mse_albedo' : alpha_mse_albedo,
+        'alpha_mse_shading' : alpha_mse_shading,
         'optimizer': optimizerM.state_dict(),
   }
   save_ckp(checkpoint_model, checkpoint_model_path+"checkpoint_"+str(epoch+1)+".pt")

@@ -15,6 +15,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
 import scipy.io
+from os import path
 
 
 def toInt1(elem):
@@ -44,7 +45,9 @@ class AlbShadDataset(Dataset):
             data = os.listdir(path)
             for j in data:
                 final_dir_path = os.path.join(path,j)
-                self.data.append(os.path.join(final_dir_path,"Camera_front000001.mat"))
+                final_img_path = os.path.join(final_dir_path,"Camera_front000001.mat")
+                if(path.exists(final_img_path)):
+                    self.data.append(final_img_path)
         self.transform = transform
 
     def __len__(self):

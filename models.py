@@ -171,7 +171,7 @@ class FusionModule(nn.Module):
         # self.in_channels= in_channels
         # self.encoderRGB = EncoderRGB(self.in_channels)
         # self.encoderShading = EncoderShading(self.in_channels)
-        self.attentionModule = ContextualAttention()
+        self.attentionModule = ContextualAttention(use_cuda = True)
         self.conv2d1 = nn.Conv2d(256,32,kernel_size=1)
         self.conv2d2 = nn.Conv2d(288,64,kernel_size=1)
     def forward(self,rgb_features,shading_features):

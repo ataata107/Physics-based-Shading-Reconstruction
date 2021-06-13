@@ -90,7 +90,7 @@ net_model = FinalModel().to(device)
 optimizerM = optim.Adam(net_model.parameters(), lr=lr, betas=(beta1, beta2))
 
 if(pretrained_model!=None):
-  net_model, optimizerD, start_epoch = load_ckp(checkpoint_model_path+pretrained_model, net_model, optimizerM)
+  net_model, optimizerM, start_epoch = load_ckp(checkpoint_model_path+pretrained_model, net_model, optimizerM)
   print("Loaded pretrained: " + pretrained_model)
 
 
@@ -109,7 +109,7 @@ for epoch in range(start_epoch,num_epochs):
   step = 1
   for i, data in enumerate(dataloader, 0):
     # if(step%4!=0):
-    net_model.zero_grad()
+    optimizerM.zero_grad()
 
     image_rgb = data['RGB'].to(device)#.float()
     image_albedo = data['albedo'].to(device)

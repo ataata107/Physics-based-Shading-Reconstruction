@@ -89,9 +89,13 @@ net_model = FinalModel().to(device)
 # net_impainter.apply(weights_init)
 alpha_mse_albedo = torch.nn.Parameter(torch.randn(1, requires_grad=True, dtype=torch.float, device=device))
 alpha_mse_shading = torch.nn.Parameter(torch.randn(1, requires_grad=True, dtype=torch.float, device=device))
-optimizerM = optim.Adam(net_model.parameters(), lr=lr, betas=(beta1, beta2))
-optimizerM.param_groups.append({'params': alpha_mse_albedo})
-optimizerM.param_groups.append({'params': alpha_mse_shading})
+optimizerM = optim.Adam([
+      {'params': net_model.parameters()},
+      {'params': alpha_mse_albedo},
+      {'params': alpha_mse_shading}
+  ], lr=lr, betas=(beta1, beta2))
+# optimizerM.param_groups.append({'params': alpha_mse_albedo})
+# optimizerM.param_groups.append({'params': alpha_mse_shading})
 
 if(pretrained_model!=None):
   net_model, optimizerM, start_epoch, alpha_mse_albedo, alpha_mse_shading = load_ckp(checkpoint_model_path+pretrained_model, net_model, optimizerM)

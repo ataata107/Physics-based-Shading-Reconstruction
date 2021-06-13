@@ -139,7 +139,7 @@ for epoch in range(start_epoch,num_epochs):
     err.backward()
     optimizerM.step()
     
-    print("Epoch"+str(epoch),"Step"+str(step),abs(err.item()))
+    print("Epoch"+str(epoch),"Step"+str(step),abs(err.item()),alpha_mse_albedo, alpha_mse_shading)
     if(step%200==0):
       checkpoint_model = {
           'epoch': epoch + 1,

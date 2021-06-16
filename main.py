@@ -41,9 +41,9 @@ def toInt3(elem):
 # Gradient loss
 def grad_loss(pdt, gt, device, direction = "x"):
   if(direction=="x"):
-    filter_1 = torch.from_numpy(np.array([[-1,0,1],[-2,0,2],[-1,0,1]])).to(device).expand(1, gt.size(1), 3, 3)
+    filter_1 = torch.from_numpy(np.array([[-1.,0.,1.],[-2.,0.,2.],[-1.,0.,1.]])).to(device).expand(1, gt.size(1), 3, 3)
   else:
-    filter_1 = torch.from_numpy(np.array([[-1,-2,-1],[0,0,0],[1,2,1]])).to(device).expand(1, gt.size(1), 3, 3)
+    filter_1 = torch.from_numpy(np.array([[-1.,-2.,-1.],[0.,0.,0.],[1.,2.,1.]])).to(device).expand(1, gt.size(1), 3, 3)
   pdt_grad = F.conv2d(pdt, filter_1, stride=1)
   gt_grad = F.conv2d(gt, filter_1, stride=1)
   return loss_l2(pdt_grad, gt_grad)

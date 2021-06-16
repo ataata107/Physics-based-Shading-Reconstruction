@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
 import torchvision.transforms as transforms
+import torch.nn.functional as F
 import math
 import random
 from torchvision.models.segmentation.deeplabv3 import DeepLabHead
@@ -17,6 +18,9 @@ from torch.autograd import Variable
 from dataloader import AlbShadDataset, Rescale, ToTensor
 from models import FinalModel
 from util import load_ckp, save_ckp
+
+loss_l1 = nn.L1Loss()
+loss_l2 = nn.MSELoss()
 
 # custom weights initialization called on netG and netD
 def weights_init(m):
@@ -33,6 +37,16 @@ def toInt3(elem):
     val  = elem.split("_")
     val = val[1].split('.')
     return int(val[0])
+
+# Gradient loss
+def grad_loss(pdt, gt, device, direction = "x"):
+  if(direction=="x"):
+    filter_1 = torch.from_numpy(np.array([[-1,0,1],[-2,0,2],[-1,0,1]])).to(device).view(1, 1, 3, 3)
+  else:
+    filter_1 = torch.from_numpy(np.array([[-1,-2,-1],[0,0,0],[1,2,1]])).to(device).view(1, 1, 3, 3)
+  pdt_grad = F.conv2d(pdt, filter_1, stride=1)
+  gt_grad = F.conv2d(gt, filter_1, stride=1)
+  return loss_l2(pdt_grad, gt_grad)
 
 # Set random seed for reproducibility
 manualSeed = 999
@@ -102,8 +116,7 @@ if(pretrained_model!=None):
   print("Loaded pretrained: " + pretrained_model)
 
 
-loss_l1 = nn.L1Loss()
-loss_l2 = nn.MSELoss()
+
 
 I_losses = []
 iters = 0
@@ -131,8 +144,15 @@ for epoch in range(start_epoch,num_epochs):
     smse_loss_1 = loss_l2(albedo_pred*alpha_mse_albedo, image_albedo)
     smse_loss_2 = loss_l2(shading_pred*alpha_mse_shading, image_shading)
 
-    albedo_loss = 2*(0.95*smse_loss_1 + 0.05*mse_loss_1)
-    shading_loss = 2*(0.95*smse_loss_2 + 0.05*mse_loss_2)
+    grad_loss_x_1 = grad_loss(albedo_pred,image_albedo, device)
+    grad_loss_y_1 = grad_loss(albedo_pred,image_albedo, device,"y")
+    grad_loss_x_2 = grad_loss(shading_pred,image_shading, device)
+    grad_loss_y_2 = grad_loss(shading_pred,image_shading, device,"y")
+    grad_loss_1 = grad_loss_x_1 + grad_loss_y_1
+    grad_loss_2 = grad_loss_x_2 + grad_loss_y_2
+
+    albedo_loss = 2*(0.95*smse_loss_1 + 0.05*mse_loss_1) + 1*grad_loss_1
+    shading_loss = 2*(0.95*smse_loss_2 + 0.05*mse_loss_2) + 1*grad_loss_2
 
     err = 1*albedo_loss + 1*shading_loss
 

@@ -161,7 +161,7 @@ for epoch in range(start_epoch,num_epochs):
     albedo_loss = 2*(0.95*smse_loss_1 + 0.05*mse_loss_1) + 1*grad_loss_1 + 1*dsim_loss_1
     shading_loss = 2*(0.95*smse_loss_2 + 0.05*mse_loss_2) + 1*grad_loss_2 + 1*dsim_loss_2
     pred_rgb = albedo_pred*shading_pred
-    pred_rgb *= 255.0/pred_rgb.max()
+    # pred_rgb *= 255.0/pred_rgb.max()
     image_loss = loss_l2(pred_rgb, image_rgb)
 
     err = 1*albedo_loss + 1*shading_loss +0.1*image_loss

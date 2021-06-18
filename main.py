@@ -18,6 +18,7 @@ from torch.autograd import Variable
 from dataloader import AlbShadDataset, Rescale, ToTensor
 from models import FinalModel
 from util import load_ckp, save_ckp
+import ssim
 
 loss_l1 = nn.L1Loss()
 loss_l2 = nn.MSELoss()
@@ -151,8 +152,14 @@ for epoch in range(start_epoch,num_epochs):
     grad_loss_1 = grad_loss_x_1 + grad_loss_y_1
     grad_loss_2 = grad_loss_x_2 + grad_loss_y_2
 
-    albedo_loss = 2*(0.95*smse_loss_1 + 0.05*mse_loss_1) + 1*grad_loss_1
-    shading_loss = 2*(0.95*smse_loss_2 + 0.05*mse_loss_2) + 1*grad_loss_2
+    ssim_loss_1 = ssim.SSIM(window_size=7)
+    dsim_loss_1 = (1-ssim_loss_1(albedo_pred, image_albedo))/2.0
+    ssim_loss_2 = ssim.SSIM(window_size=7)
+    dsim_loss_2 = (1-ssim_loss_1(shading_pred, image_shading)/2.0)
+
+
+    albedo_loss = 2*(0.95*smse_loss_1 + 0.05*mse_loss_1) + 1*grad_loss_1 + 1*dsim_loss_1
+    shading_loss = 2*(0.95*smse_loss_2 + 0.05*mse_loss_2) + 1*grad_loss_2 + 1*dsim_loss_2
 
     err = 1*albedo_loss + 1*shading_loss
 

@@ -114,7 +114,7 @@ optimizerM = optim.Adam([
       {'params': alpha_mse_albedo},
       {'params': alpha_mse_shading}
   ], lr=lr, betas=(beta1, beta2))
-scheduler = optim.lr_scheduler..ExponentialLR(optimizerM, gamma=0.94)
+scheduler = optim.lr_scheduler.ExponentialLR(optimizerM, gamma=0.94)
 # optimizerM.param_groups.append({'params': alpha_mse_albedo})
 # optimizerM.param_groups.append({'params': alpha_mse_shading})
 

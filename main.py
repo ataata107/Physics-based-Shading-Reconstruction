@@ -16,6 +16,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
 from dataloader import AlbShadDataset, Rescale, ToTensor
+import torch.optim.lr_scheduler
 from models import FinalModel
 from util import load_ckp, save_ckp
 import ssim
@@ -49,6 +50,10 @@ def grad_loss(pdt, gt, device, direction = "x"):
   gt_grad = F.conv2d(gt, filter_1, stride=1)
   return loss_l2(pdt_grad, gt_grad)
 
+def get_lr(optimizer):
+    for param_group in optimizer.param_groups:
+        return param_group['lr']
+
 # Set random seed for reproducibility
 manualSeed = 999
 #manualSeed = random.randint(1, 10000) # use if you want new results
@@ -59,16 +64,16 @@ torch.manual_seed(manualSeed)
 workers = 2
 
 # Batch size during training
-batch_size = 2
+batch_size = 8
 
 #Start Epoch
 start_epoch = 0
 
 # Number of training epochs
-num_epochs = 30
+num_epochs = 35
 
 # Learning rate for optimizers
-lr = 0.0004
+lr = 0.000512
 
 # Beta1 hyperparam for Adam optimizers
 beta1 = 0.9
@@ -109,6 +114,7 @@ optimizerM = optim.Adam([
       {'params': alpha_mse_albedo},
       {'params': alpha_mse_shading}
   ], lr=lr, betas=(beta1, beta2))
+scheduler = lr_scheduler.ExponentialLR(optimizerM, gamma=0.94)
 # optimizerM.param_groups.append({'params': alpha_mse_albedo})
 # optimizerM.param_groups.append({'params': alpha_mse_shading})
 
@@ -129,6 +135,7 @@ net_model.train()
 step = 1
 for epoch in range(start_epoch,num_epochs):
   step = 1
+  print(get_lr(optimizerM))
   for i, data in enumerate(dataloader, 0):
     # if(step%4!=0):
     optimizerM.zero_grad()
@@ -191,5 +198,6 @@ for epoch in range(start_epoch,num_epochs):
         'optimizer': optimizerM.state_dict(),
   }
   save_ckp(checkpoint_model, checkpoint_model_path+"checkpoint_"+str(epoch+1)+".pt")
+  scheduler.step()
 
   # break

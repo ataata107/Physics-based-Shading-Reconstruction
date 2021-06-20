@@ -197,7 +197,7 @@ for epoch in range(start_epoch,num_epochs):
     ssim_loss_1 = ssim.SSIM(window_size=7)
     dsim_loss_1 = (1-ssim_loss_1(albedo_pred, image_albedo))/2.0
     ssim_loss_2 = ssim.SSIM(window_size=7)
-    dsim_loss_2 = (1-ssim_loss_1(shading_pred, image_shading)/2.0)
+    dsim_loss_2 = (1-ssim_loss_1(shading_pred, image_shading))/2.0
 
     vgg_features_im_albedo = loss_network(image_albedo)
     vgg_features_albedo_pred = loss_network(albedo_pred)

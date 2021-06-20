@@ -10,13 +10,13 @@ import torchvision.transforms as transforms
 import torch.nn.functional as F
 import math
 import random
-from torchvision.models.segmentation.deeplabv3 import DeepLabHead
+# from torchvision.models.segmentation.deeplabv3 import DeepLabHead
 from torchvision import models
 import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
 from dataloader import AlbShadDataset, Rescale, ToTensor
-from torchvision import models
+# from torchvision import models
 from models import FinalModel
 from util import load_ckp, save_ckp
 import ssim
@@ -203,7 +203,7 @@ for epoch in range(start_epoch,num_epochs):
     vgg_features_albedo_pred = loss_network(albedo_pred)
     perceptual_loss = 0
     for name in vgg_features_im_albedo._fields:
-      perceptual_loss+=loss_l2(vgg_features_albedo_pred.name,vgg_features_im_albedo.name)
+      perceptual_loss+=loss_l2(getattr(vgg_features_albedo_pred,name),getattr(vgg_features_im_albedo,name))
 
     albedo_loss = 2*(0.95*smse_loss_1 + 0.05*mse_loss_1) + 1*grad_loss_1 + 1*dsim_loss_1 + 0.1*perceptual_loss
     shading_loss = 2*(0.95*smse_loss_2 + 0.05*mse_loss_2) + 1*grad_loss_2 + 1*dsim_loss_2

@@ -16,10 +16,11 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
 from dataloader import AlbShadDataset, Rescale, ToTensor
-# import torch.optim.lr_scheduler
+from torchvision import models
 from models import FinalModel
 from util import load_ckp, save_ckp
 import ssim
+from collections import namedtuple
 
 loss_l1 = nn.L1Loss()
 loss_l2 = nn.MSELoss()
@@ -53,6 +54,30 @@ def grad_loss(pdt, gt, device, direction = "x"):
 def get_lr(optimizer):
     for param_group in optimizer.param_groups:
         return param_group['lr']
+
+LossOutput = namedtuple("LossOutput", ["conv1_1", "conv1_2", "conv2_1", "conv2_2","conv3_1","conv3_2","conv3_3"])
+class LossNetwork(torch.nn.Module):
+    def __init__(self, vgg_model):
+        super(LossNetwork, self).__init__()
+        self.vgg_layers = vgg_model.features
+        self.layer_name_mapping = {
+            '0': "conv1_1",
+            '2': "conv1_2",
+            '5': "conv2_1",
+            '7': "conv2_2",
+            '10': "conv3_1",
+            '12': "conv3_2",
+            '14': "conv3_3"
+        }
+    
+    def forward(self, x):
+        output = {}
+        for name, module in self.vgg_layers._modules.items():
+            x = module(x)
+            if name in self.layer_name_mapping:
+                output[self.layer_name_mapping[name]] = x
+        return LossOutput(**output)
+
 
 # Set random seed for reproducibility
 manualSeed = 999
@@ -106,6 +131,15 @@ flow_dataset = AlbShadDataset(transform = transforms.Compose([ToTensor(),Rescale
 dataloader = DataLoader(flow_dataset, batch_size=batch_size,shuffle=True, num_workers=workers)
 
 net_model = FinalModel().to(device) 
+vgg16 = models.vgg16(pretrained=True).to(device)
+print(vgg16)
+for param in vgg16.parameters():
+    param.requires_grad = False
+loss_network = LossNetwork(vgg16).to(device)
+loss_network.eval()
+
+normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                 std=[0.229, 0.224, 0.225])
 # net_impainter.apply(weights_init)
 alpha_mse_albedo = (torch.rand(1, requires_grad=True, dtype=torch.float, device=device))
 alpha_mse_shading = (torch.rand(1, requires_grad=True, dtype=torch.float, device=device))
@@ -130,6 +164,7 @@ iters = 0
 
 print("Starting Training Loop... from" + str(start_epoch))
 net_model.train()
+# vgg16.eval()
 
 
 step = 1
@@ -164,8 +199,13 @@ for epoch in range(start_epoch,num_epochs):
     ssim_loss_2 = ssim.SSIM(window_size=7)
     dsim_loss_2 = (1-ssim_loss_1(shading_pred, image_shading)/2.0)
 
+    vgg_features_im_albedo = loss_network(image_albedo)
+    vgg_features_albedo_pred = loss_network(albedo_pred)
+    perceptual_loss = 0
+    for name in vgg_features_im_albedo._fields:
+      perceptual_loss+=loss_l2(vgg_features_albedo_pred.name,vgg_features_im_albedo.name)
 
-    albedo_loss = 2*(0.95*smse_loss_1 + 0.05*mse_loss_1) + 1*grad_loss_1 + 1*dsim_loss_1
+    albedo_loss = 2*(0.95*smse_loss_1 + 0.05*mse_loss_1) + 1*grad_loss_1 + 1*dsim_loss_1 + 0.1*perceptual_loss
     shading_loss = 2*(0.95*smse_loss_2 + 0.05*mse_loss_2) + 1*grad_loss_2 + 1*dsim_loss_2
     pred_rgb = albedo_pred*shading_pred
     # pred_rgb *= 255.0/pred_rgb.max()

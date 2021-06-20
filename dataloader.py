@@ -61,9 +61,9 @@ class AlbShadDataset(Dataset):
         image_rgb = mat["Image_R"]
         image_albedo = mat["Diffuse_color"]
         image_shading = mat["Z"]
-        image_rgb *= 255.0/image_rgb.max()
-        image_albedo *= 255.0/image_albedo.max()
-        image_shading *= 255.0/image_shading.max()
+        # image_rgb *= 255.0/image_rgb.max()
+        # image_albedo *= 255.0/image_albedo.max()
+        # image_shading *= 255.0/image_shading.max()
         sample = {'RGB': image_rgb, 'albedo' : image_albedo, 'shading': image_shading}
         if self.transform:
           sample = self.transform(sample)
